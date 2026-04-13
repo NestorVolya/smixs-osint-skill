@@ -1,452 +1,538 @@
 ---
 name: osint
 description: >
-  Conduct deep OSINT research on individuals. Build full digital footprint, psychoprofile
-  (MBTI/Big Five), career history, social graph with confidence scores. Recursive
-  self-evaluation until completeness threshold is met. Includes internal intelligence
-  (Telegram history, email, vault contacts) before going external.
-  Use when: "osint", "досье", "research person", "find everything about", "пробей",
+  Глибоке OSINT-дослідження особи. Побудова цифрового профілю, психопрофілю
+  (MBTI/Big Five), кар'єрної мапи, графу зв'язків із оцінкою достовірності.
+  Рекурсивна самооцінка до досягнення порогу повноти. Включає внутрішню розвідку
+  (Telegram-историія, email, vault-контакти) перед зовнішнім пошуком.
+  Використовувати коли: "osint", "досье", "research person", "find everything about", "пробей",
   "разведка", "due diligence", "background check", "digital footprint",
-  "найди всё про", "собери информацию", "кто это", "профиль человека".
-  NOT for: company/product research without a named person, competitive analysis,
-  market research, content generation, or general web scraping tasks.
+  "найди всё про", "собери информацию", "кто это", "профіль людини", "досьє".
+  НЕ для: дослідження компаній/продуктів без конкретної особи, конкурентного аналізу,
+  маркетингових досліджень, генерації контенту або загального веб-скрапінгу.
 ---
 
-# OSINT Skill v3.2
+# OSINT Skill v3.3
 
-Systematic intelligence gathering on individuals. From a name or handle to a scored
-dossier with psychoprofile, career map, and entry points.
+Систематичний збір розвідданих про особу. Від імені або нікнейму — до оціненого
+досьє з психопрофілем, кар'єрною картою та точками входу.
 
-## Phase Router
+## Маршрутизатор фаз
 
-Determine entry point from context:
+Визначити точку входу з контексту:
 
-- New name/handle/URL, "пробей", "find out about" → Phase 0 (full cycle)
-- "Add LinkedIn/Instagram data" to existing dossier → Phase 2 (extraction)
-- "Build psychoprofile" from existing data → Phase 4
-- "Rate completeness" of existing dossier → Phase 5
-- "Reformat" or "present" findings → Phase 6
+- Нове ім'я/нікнейм/URL, "пробей", "знайди все про" → Фаза 0 (повний цикл)
+- "Додай дані LinkedIn/Instagram" до наявного досьє → Фаза 2 (витяг)
+- "Побудуй психопрофіль" із наявних даних → Фаза 4
+- "Оціни повноту" наявного досьє → Фаза 5
+- "Переформатуй", "збережи", "зберегти досьє", "відправити в Notion/Telegram/файл" → Фаза 6
 
-Default (full research request): Phase 0 → 1 → 1.5 → 2 → 3 → 4 → 5 → 6.
+За замовчуванням (повний запит на дослідження): Фаза 0 → 1 → 1.5 → 2 → 3 → 4 → 5 → 6.
 
-## Environment
+## Середовище
 
-All API keys via environment variables. Never hardcode tokens.
+Всі API-ключі через змінні середовища. Ніколи не хардкодити токени.
 
-- `PERPLEXITY_API_KEY` — Perplexity Sonar (fast answers + deep research)
-- `EXA_API_KEY` — Exa AI (semantic search, company/people research, deep research)
-- `TAVILY_API_KEY` — Tavily (agent-optimized search + extract, $0.005/req basic)
+- `PERPLEXITY_API_KEY` — Perplexity Sonar (швидкі відповіді + глибоке дослідження)
+- `EXA_API_KEY` — Exa AI (семантичний пошук, дослідження компаній/людей)
+- `TAVILY_API_KEY` — Tavily (пошук оптимізований для агентів, $0.005/запит базовий)
 - `APIFY_API_TOKEN` — Apify scraping (LinkedIn, Instagram, Facebook)
 - `JINA_API_KEY` — Jina reader/search/deepsearch
 - `PARALLEL_API_KEY` — Parallel AI search
-- `BRIGHTDATA_MCP_URL` — Bright Data MCP endpoint (full URL with token)
-- `MCPORTER_CONFIG` — mcporter config path
+- `BRIGHTDATA_MCP_URL` — Bright Data MCP endpoint (повний URL з токеном)
+- `MCPORTER_CONFIG` — шлях до конфігу mcporter
 
-## Scripts
+## Скрипти
 
-Run from skill dir: `bash scripts/<name>.sh`.
-Each validates env vars, exits with descriptive error + URL to get the key.
+Запускати з директорії скіла: `bash scripts/<назва>.sh`.
+Кожен перевіряє змінні середовища, завершується з описовою помилкою + URL для отримання ключа.
 
-**Search & Research:**
-- `diagnose.sh` — run FIRST. Capability map of all tools.
-- `perplexity.sh` — `search <query>` | `sonar <query>` (AI answer) | `deep <query>` (deep research)
-- `tavily.sh` — `search <query>` (basic $0.005) | `deep <query>` (advanced) | `extract <url>`
-- `exa.sh` — `search <query>` | `company <name>` | `people <name>` | `crawl <url>` | `deep <prompt>`
-- `first-volley.sh "Name" "context"` — parallel search, all engines at once.
-- `merge-volley.sh <outdir>` — deduplicate and merge first-volley results.
+**Пошук і дослідження:**
+- `diagnose.sh` — запускати ПЕРШИМ. Карта можливостей всіх інструментів.
+- `perplexity.sh` — `search <запит>` | `sonar <запит>` (AI-відповідь) | `deep <запит>` (глибоке дослідження)
+- `tavily.sh` — `search <запит>` (базовий $0.005) | `deep <запит>` (розширений) | `extract <url>`
+- `exa.sh` — `search <запит>` | `company <назва>` | `people <ім'я>` | `crawl <url>` | `deep <промпт>`
+- `first-volley.sh "Ім'я" "контекст"` — паралельний пошук, всі рушії одночасно.
+- `merge-volley.sh <outdir>` — дедублікація і злиття результатів first-volley.
 
-**Scraping:**
-- `apify.sh` — `linkedin <url>` | `instagram <handle>` | `run` | `results` | `store-search`
-- `run-actor.sh` — **universal Apify runner (55+ actors).** Embedded from [apify/agent-skills](https://github.com/apify/agent-skills).
-  Quick answer: `bash scripts/run-actor.sh "actor/id" '{"input":"json"}'`
-  Export: `bash scripts/run-actor.sh "actor/id" '{"input":"json"}' --output /tmp/out.csv`
-- `jina.sh` — `read <url>` | `search <query>` | `deepsearch <query>`
-- `parallel.sh` — `search <query>` | `extract <url>`
+**Скрапінг:**
+- `apify.sh` — `linkedin <url>` | `instagram <нікнейм>` | `run` | `results` | `store-search`
+- `run-actor.sh` — **універсальний запуск Apify (55+ акторів).** Вбудований з [apify/agent-skills](https://github.com/apify/agent-skills).
+  Швидкий запуск: `bash scripts/run-actor.sh "actor/id" '{"input":"json"}'`
+  Експорт: `bash scripts/run-actor.sh "actor/id" '{"input":"json"}' --output /tmp/out.csv`
+- `jina.sh` — `read <url>` | `search <запит>` | `deepsearch <запит>`
+- `parallel.sh` — `search <запит>` | `extract <url>`
 - `brightdata.sh` — `scrape <url>` | `scrape-batch` | `search` | `search-geo <cc>` | `search-yandex`
 
-## Research Escalation Flow
+## Ескалація дослідження
 
-**Принцип: от дешёвого к дорогому, от быстрого к глубокому.**
+**Принцип: від дешевого до дорогого, від швидкого до глибокого.**
 
-### Level 1: Quick Answers (секунды, ~$0.00)
-Начни ВСЕГДА с этого. Получи быстрый контекст прежде чем копать.
-Запускай ВСЕ параллельно:
+### Рівень 1: Швидкі відповіді (секунди, ~$0.00)
+Починати ЗАВЖДИ з цього. Отримати швидкий контекст перед глибоким копанням.
+Запускати ВСЕ паралельно:
 ```bash
-# Perplexity Sonar — AI ответ с цитатами
-bash skills/osint/scripts/perplexity.sh sonar "Who is <Name>, <context>"
-# Brave Search — классический поиск
-web_search "<Name> <company> <role>"
-# Tavily — agent-optimized search с AI answer
-bash skills/osint/scripts/tavily.sh search "<Name> <context>"
-# Exa — семантический поиск + company/people research
-bash skills/osint/scripts/exa.sh search "<Name> <context>"
-bash skills/osint/scripts/exa.sh people "<Name>"
+# Perplexity Sonar — AI-відповідь з цитатами
+bash skills/osint/scripts/perplexity.sh sonar "Who is <Ім'я>, <контекст>"
+# Brave Search — класичний пошук
+web_search "<Ім'я> <компанія> <посада>"
+# Tavily — пошук оптимізований для агентів з AI-відповіддю
+bash skills/osint/scripts/tavily.sh search "<Ім'я> <контекст>"
+# Exa — семантичний пошук + дослідження компаній/людей
+bash skills/osint/scripts/exa.sh search "<Ім'я> <контекст>"
+bash skills/osint/scripts/exa.sh people "<Ім'я>"
 ```
-→ Получаешь: быстрые факты, ссылки, контекст.
-→ Решение: достаточно? → Phase 6. Нужно больше? → Level 2.
+→ Отримуємо: швидкі факти, посилання, контекст.
+→ Рішення: достатньо? → Фаза 6. Потрібно більше? → Рівень 2.
 
-### Level 2: Source Verification (секунды-минуты, ~$0.01)
-Проверяй источники из Level 1 через fetch:
+### Рівень 2: Верифікація джерел (секунди-хвилини, ~$0.01)
+Перевіряти джерела з Рівня 1 через fetch:
 ```bash
-# Читай найденные URL
-web_fetch "<url_from_perplexity>"
+# Читати знайдені URL
+web_fetch "<url_з_perplexity>"
 bash skills/osint/scripts/jina.sh read "<url>"
 bash skills/osint/scripts/parallel.sh extract "<url>"
 ```
-→ Получаешь: подтверждённые факты, cross-reference.
-→ Совпадает? → дополняй досье. Нужно глубже? → Level 3.
+→ Отримуємо: підтверджені факти, крос-верифікацію.
+→ Збігається? → доповнювати досьє. Потрібно глибше? → Рівень 3.
 
-### Level 3: Social Media Deep Dive (~$0.01-0.10)
-Подключай scraping для соцсетей:
+### Рівень 3: Глибоке занурення в соціальні мережі (~$0.01-0.10)
+Підключати скрапінг для соцмереж:
 ```bash
 # LinkedIn
 bash skills/osint/scripts/apify.sh linkedin "<url>"
 # Instagram
-bash skills/osint/scripts/apify.sh instagram "<handle>"
-# Facebook, заблокированные сайты
+bash skills/osint/scripts/apify.sh instagram "<нікнейм>"
+# Facebook, заблоковані сайти
 bash skills/osint/scripts/brightdata.sh scrape "<url>"
 ```
-→ Получаешь: структурированные профили, фото, связи.
+→ Отримуємо: структуровані профілі, фото, зв'язки.
 
-### Level 4: Deep Research (~$0.05-0.50)
-Если нужно копать ещё глубже — формируй развёрнутый промпт и отправляй в deep research.
-Запускай ВСЕ параллельно (30-60 сек каждый):
+### Рівень 4: Глибоке дослідження (~$0.05-0.50)
+Якщо потрібно копати ще глибше — формувати розгорнутий промпт і відправляти в deep research.
+Запускати ВСЕ паралельно (30-60 сек кожен):
 ```bash
 # Perplexity Deep Research
-bash skills/osint/scripts/perplexity.sh deep "<detailed research prompt about Name>"
+bash skills/osint/scripts/perplexity.sh deep "<детальний промпт про Ім'я>"
 # Exa Deep Research
-bash skills/osint/scripts/exa.sh deep "<detailed prompt>"
+bash skills/osint/scripts/exa.sh deep "<детальний промпт>"
 # Parallel AI Deep Search
-bash skills/osint/scripts/parallel.sh search "<detailed query>"
+bash skills/osint/scripts/parallel.sh search "<детальний запит>"
 # Jina DeepSearch
-bash skills/osint/scripts/jina.sh deepsearch "<query>"
+bash skills/osint/scripts/jina.sh deepsearch "<запит>"
 ```
 
-**Правило:** Level 4 промпт должен быть РАЗВЁРНУТЫМ — включай всё что уже знаешь
-из Level 1-3, чтобы deep research не повторял базовые факты, а копал дальше.
+**Правило:** промпт Рівня 4 має бути РОЗГОРНУТИМ — включати все вже відоме
+з Рівнів 1-3, щоб deep research не повторював базові факти, а копав глибше.
 
-## Swarm Mode (DEFAULT)
+## Режим Swarm (ЗА ЗАМОВЧУВАННЯМ)
 
-OSINT research runs as a **swarm of parallel sub-agents on Sonnet**.
-The main agent is the coordinator — it does NOT scrape itself.
+OSINT-дослідження запускається як **рій паралельних суб-агентів на Sonnet**.
+Головний агент — координатор, він сам НЕ скрапить.
 
-### How it works:
-1. Main agent runs Phase 0 (tooling check) and Phase 1 (seed collection) to get initial context
-2. Main agent spawns 3-5 sub-agents via `sessions_spawn` with `model: sonnet`, `mode: run`
-3. Each sub-agent gets a focused task + all known data from Phase 1
-4. Sub-agents return results → main agent merges into dossier
+### Як працює:
+1. Головний агент виконує Фазу 0 (перевірка інструментів) і Фазу 1 (збір насіння) для початкового контексту
+2. Головний агент породжує 3-5 суб-агентів через `sessions_spawn` з `model: sonnet`, `mode: run`
+3. Кожен суб-агент отримує конкретне завдання + всі відомі дані з Фази 1
+4. Суб-агенти повертають результати → головний агент зливає в досьє
 
-### Task split pattern:
-- **Agent 1: YouTube/Content** — extract transcripts via Apify (NOT yt-dlp, NOT BrightData — YouTube blocks them). 3-5 videos, speech style, topics. Use `streamers/youtube-channel-scraper` for channel data
-- **Agent 2: Facebook deep** — BrightData scrape: profile, posts, about, photos, friends (use m.facebook.com for more data). For public Pages: `apify/facebook-pages-scraper` + `apify/facebook-page-contact-information`
-- **Agent 3: Social platforms** — Instagram (Apify + tagged/comments scrapers), DOU, company websites, LinkedIn (BrightData). Contact enrichment: `vdrmota/contact-info-scraper` on found websites
-- **Agent 4: TikTok + Regional** — TikTok profile/videos (`clockworks/tiktok-profile-scraper`), local registries, press, university records, Yandex search, Google Maps (`compass/crawler-google-places` if business owner)
-- **Agent 5: Deep research** — Perplexity deep, Exa deep, Parallel deep (if needed)
+### Розподіл завдань:
+- **Агент 1: YouTube/Контент** — витяг транскриптів через Apify (НЕ yt-dlp, НЕ BrightData — YouTube блокує їх). 3-5 відео, стиль мовлення, теми. Використовувати `streamers/youtube-channel-scraper` для даних каналу
+- **Агент 2: Facebook deep** — BrightData scrape: профіль, пости, about, фото, друзі (використовувати m.facebook.com для більшого обсягу даних). Для публічних сторінок: `apify/facebook-pages-scraper` + `apify/facebook-page-contact-information`
+- **Агент 3: Соціальні платформи** — Instagram (Apify + скрапери тегованих/коментарів), DOU, сайти компаній, LinkedIn (BrightData). Збагачення контактів: `vdrmota/contact-info-scraper` на знайдених сайтах
+- **Агент 4: TikTok + Регіональне** — TikTok профіль/відео (`clockworks/tiktok-profile-scraper`), місцеві реєстри, преса, університетські записи, Яндекс, Google Maps (`compass/crawler-google-places` якщо власник бізнесу)
+- **Агент 5: Глибоке дослідження** — Perplexity deep, Exa deep, Parallel deep (якщо потрібно)
 
-### Rules:
-- Always pass ALL known data to each sub-agent (names, URLs, emails, phones, context)
-- Each sub-agent saves results to `/tmp/osint-<subject>-<task>.md`
-- Main agent waits for all results, then runs Phase 3-6 (cross-reference, psychoprofile, dossier)
-- Budget: each sub-agent ≤$0.15, total swarm ≤$0.50
-- YouTube transcripts: use **Apify** actors, NOT BrightData or yt-dlp (both blocked by YouTube)
+### Правила:
+- Завжди передавати ВСІ відомі дані кожному суб-агенту (імена, URL, emails, телефони, контекст)
+- Кожен суб-агент зберігає результати в `/tmp/osint-<об'єкт>-<завдання>.md`
+- Головний агент чекає всі результати, потім виконує Фази 3-6 (крос-верифікація, психопрофіль, досьє)
+- Бюджет: кожен суб-агент ≤$0.15, весь рій ≤$0.50
+- Транскрипти YouTube: використовувати **Apify** актори, НЕ BrightData або yt-dlp (обидва блокуються YouTube)
 
-### Why swarm:
-- 5 agents × 5 min = 10 min total (vs 30+ min sequential)
-- Sonnet is 5x cheaper than Opus
-- Parallel scraping avoids rate limit stacking on single IP
+### Чому рій:
+- 5 агентів × 5 хв = 10 хв загалом (проти 30+ хв послідовно)
+- Sonnet у 5 разів дешевший за Opus
+- Паралельний скрапінг уникає накопичення rate limit на одному IP
 
 ---
 
-## Phase 0: Tooling Self-Check
+## Фаза 0: Самоперевірка інструментів
 
-1. Execute `bash skills/osint/scripts/diagnose.sh`.
-2. Log available vs missing tools.
-3. Check internal tools: `tg.py` (Telegram history), `himalaya` (email), vault contacts.
-4. If Bright Data unavailable → Facebook and LinkedIn deep scrape limited. Inform user.
-5. If Apify unavailable → Instagram and LinkedIn structured data limited.
-6. Proceed with available toolset.
+1. Виконати `bash skills/osint/scripts/diagnose.sh`.
+2. Зафіксувати доступні та відсутні інструменти.
+3. Перевірити внутрішні інструменти: `tg.py` (Telegram-история), `himalaya` (email), vault-контакти.
+4. Якщо Bright Data недоступний → глибокий скрапінг Facebook і LinkedIn обмежений. Повідомити користувача.
+5. Якщо Apify недоступний → структуровані дані Instagram і LinkedIn обмежені.
+6. Продовжити з доступним набором інструментів.
 
-## Phase 1: Seed Collection
+## Фаза 1: Збір насіння
 
-**Start with Level 1 (quick answers) ALWAYS before heavy scraping.**
+**Починати з Рівня 1 (швидкі відповіді) ЗАВЖДИ, перед важким скрапінгом.**
 
-1. Parse user input. Extract identifiers: names, handles, URLs, companies, locations.
-2. **Perplexity fast pass:**
+1. Розібрати ввід користувача. Витягти ідентифікатори: імена, нікнейми, URL, компанії, локації.
+2. **Швидкий прохід Perplexity:**
    ```bash
-   bash skills/osint/scripts/perplexity.sh search "Who is <Name>, <context>"
+   bash skills/osint/scripts/perplexity.sh search "Who is <Ім'я>, <контекст>"
    ```
-3. **Brave + Parallel in parallel:**
+3. **Brave + Parallel паралельно:**
    ```bash
-   web_search "<Name> <company>"
-   bash skills/osint/scripts/first-volley.sh "Full Name" "context"
+   web_search "<Ім'я> <компанія>"
+   bash skills/osint/scripts/first-volley.sh "Повне ім'я" "контекст"
    ```
-4. **Review Perplexity citations** — fetch and verify top sources:
+4. **Перевірити цитати Perplexity** — завантажити і верифікувати топ-джерела:
    ```bash
-   web_fetch "<citation_url_1>"
-   web_fetch "<citation_url_2>"
+   web_fetch "<url_цитати_1>"
+   web_fetch "<url_цитати_2>"
    ```
-5. Parse & merge: `bash skills/osint/scripts/merge-volley.sh /tmp/osint-<timestamp>`.
-6. Collect all identifiers into seed list. Deduplicate.
-7. Flag name collisions (common names → verify with company/location cross-reference).
-8. **Decision point:** enough context? → skip to Phase 4. Need social media? → Phase 2. Need deep dive? → Level 4 (deep research).
+5. Розібрати і злити: `bash skills/osint/scripts/merge-volley.sh /tmp/osint-<timestamp>`.
+6. Зібрати всі ідентифікатори в список насіння. Дедублікувати.
+7. Позначити колізії імен (поширені імена → верифікувати компанією/локацією).
+8. **Точка рішення:** достатньо контексту? → перейти до Фази 4. Потрібні соціальні мережі? → Фаза 2. Потрібне глибоке занурення? → Рівень 4 (глибоке дослідження).
 
-**Rate limiting:** wait 1s between Brave queries, 2s between Jina calls.
-Do NOT hammer APIs in tight loops — stagger parallel launches.
+**Обмеження швидкості:** чекати 1с між запитами Brave, 2с між викликами Jina.
+Не бомбардувати API в щільних циклах — розводити паралельні запуски.
 
-## Phase 1.5: Internal Intelligence
+## Фаза 1.5: Внутрішня розвідка
 
-**Before going external, check what we already know.** This phase mines local sources
-that may contain gold — prior conversations, emails, vault contacts.
+**Перед виходом назовні — перевірити що вже відомо.** Ця фаза видобуває локальні джерела,
+які можуть містити золото — попередні розмови, листи, vault-контакти.
 
-### Telegram History
-If `tg.py` is available (check Phase 0):
+### Telegram-историія
+Якщо `tg.py` доступний (перевірено в Фазі 0):
 ```bash
-# Search by name/handle in Telegram
-python3 skills/telegram/scripts/tg.py search "Name" 20
-# If we have their username/id — read conversation history
-python3 skills/telegram/scripts/tg.py history <username_or_id> 50
+# Пошук за ім'ям/нікнеймом в Telegram
+python3 skills/telegram/scripts/tg.py search "Ім'я" 20
+# Якщо є нікнейм/id — читати историію розмови
+python3 skills/telegram/scripts/tg.py history <нікнейм_або_id> 50
 ```
 
-**What to extract from Telegram history:**
-- Communication style (formal/informal, language, emoji patterns)
-- Topics discussed — what they care about, what they ask for
-- Response patterns — reply speed, active hours → timezone
-- Shared links/files — projects they work on
-- How they address the user — relationship dynamics
-- Mentioned colleagues, partners, competitors → social graph seeds
-- Pricing discussions, deal terms (if business contact)
+**Що витягувати з Telegram-историії:**
+- Стиль спілкування (формальний/неформальний, мова, паттерни емодзі)
+- Теми обговорення — що їм важливо, про що запитують
+- Паттерни відповідей — швидкість реакції, активні години → часовий пояс
+- Передані посилання/файли — над якими проектами працюють
+- Як звертаються до користувача — динаміка стосунків
+- Згадані колеги, партнери, конкуренти → насіння соціального графу
+- Цінові обговорення, умови угод (якщо бізнес-контакт)
 
-⚠️ **Telegram history is Grade A intelligence** — unfiltered, real-time, authentic.
-Weight it higher than curated LinkedIn/Instagram profiles.
-⚠️ **Privacy:** internal intelligence stays in the dossier. Never quote DMs in public outputs.
+⚠️ **Telegram-историія — розвідка класу A** — нефільтрована, актуальна, автентична.
+Вага вища ніж у відредагованих профілях LinkedIn/Instagram.
+⚠️ **Приватність:** внутрішня розвідка залишається в досьє. Ніколи не цитувати ЛС у публічних виводах.
 
-### Email History
-If `himalaya` is available:
+### Историія email
+Якщо `himalaya` доступний:
 ```bash
-# Search emails by name or domain
+# Пошук листів за ім'ям або доменом
 ~/.local/bin/himalaya search "from:name@domain.com OR to:name@domain.com" -f INBOX
-# Or by name
-~/.local/bin/himalaya search "Name Surname" -f INBOX
-~/.local/bin/himalaya search "Name Surname" -f Sent
+# Або за ім'ям
+~/.local/bin/himalaya search "Ім'я Прізвище" -f INBOX
+~/.local/bin/himalaya search "Ім'я Прізвище" -f Sent
 ```
 
-**What to extract from email:**
-- Formal communication style vs Telegram style (contrast = insight)
-- Business proposals, invoices → financial relationship
-- CC'd people → organizational map
-- Signature block → title, phone, company, social links (often richer than LinkedIn)
+**Що витягувати з email:**
+- Формальний стиль спілкування vs Telegram (контраст = інсайт)
+- Бізнес-пропозиції, рахунки → фінансові відносини
+- Отримувачі у копії → організаційна карта
+- Блок підпису → посада, телефон, компанія, соціальні посилання (часто багатший за LinkedIn)
 
-### Vault / CRM Check
+### Перевірка Vault / CRM
 ```bash
-# Check if we already have a card
-grep -rl "Name" vault/crm/ vault/contacts/ 2>/dev/null
-# Check MOC indexes (adjust paths to your vault structure)
-grep -i "name" vault/MOC/*.md 2>/dev/null
+# Перевірити чи є вже картка
+grep -rl "Ім'я" vault/crm/ vault/contacts/ 2>/dev/null
+# Перевірити MOC-индекси (скоригувати шляхи під структуру vault)
+grep -i "ім'я" vault/MOC/*.md 2>/dev/null
 ```
 
-**If vault card exists:** read it, note last_accessed, existing tags, prior interactions.
-Don't duplicate — enrich the existing card after research completes.
+**Якщо картка vault існує:** прочитати, зафіксувати last_accessed, наявні теги, попередні взаємодії.
+Не дублювати — збагатити наявну картку після завершення дослідження.
 
-### Node Camera/Location (if paired device available)
-If meeting in person and node is available, `nodes camera_snap` can capture context.
-Only with explicit user permission.
+### Камера/Локація вузла (якщо парний пристрій доступний)
+Якщо зустріч особисто і вузол доступний, `nodes camera_snap` може зафіксувати контекст.
+Тільки з явного дозволу користувача.
 
-### Internal Intelligence Summary
-After Phase 1.5, you should know:
-- Do we have prior relationship? (cold/warm/hot contact)
-- What language do they prefer?
-- What's their communication style?
-- Any existing business context?
-- Social graph seeds from conversations
+### Підсумок внутрішньої розвідки
+Після Фази 1.5 має бути відомо:
+- Чи є попередні стосунки? (холодний/теплий/гарячий контакт)
+- Яку мову вони віддають перевагу?
+- Який у них стиль спілкування?
+- Чи є наявний бізнес-контекст?
+- Насіння соціального графу з розмов
 
-This context shapes Phase 2 priorities — if we already know their career from emails,
-focus external research on psychoprofile and social media instead.
+Цей контекст визначає пріоритети Фази 2 — якщо кар'єру вже відомо з листів,
+фокусувати зовнішнє дослідження на психопрофілі та соціальних мережах.
 
-## Phase 2: Platform Extraction
+## Фаза 2: Витяг з платформ
 
-Read `references/platforms.md` ONLY when needing URL patterns or extraction signals.
+Читати `references/platforms.md` ЛИШЕ коли потрібні URL-паттерни або сигнали витягу.
 
-Tool priority (primary → fallback). **If primary fails, switch immediately. Never retry same tool.**
+Пріоритет інструментів (основний → запасний). **Якщо основний відмовив — негайно перемикатись. Ніколи не повторювати той самий інструмент.**
 
 - LinkedIn: `apify.sh linkedin` → `brightdata.sh scrape` → `jina.sh read`
 - Instagram: `apify.sh instagram` → `brightdata.sh scrape`
-- Instagram deep: `run-actor.sh "apify/instagram-tagged-scraper"` (who tags them), `apify/instagram-comment-scraper` (sentiment)
-- Facebook personal: `brightdata.sh scrape` → none (only Bright Data works)
-- Facebook pages/groups: `run-actor.sh "apify/facebook-pages-scraper"` → `brightdata.sh scrape`
-- TikTok: `run-actor.sh "clockworks/tiktok-profile-scraper"` → `clockworks/tiktok-scraper` (comprehensive)
-- TikTok discovery: `run-actor.sh "clockworks/tiktok-user-search-scraper"` (find by keywords)
+- Instagram глибоко: `run-actor.sh "apify/instagram-tagged-scraper"` (хто тегує), `apify/instagram-comment-scraper` (тональність)
+- Facebook особистий: `brightdata.sh scrape` → нічого (тільки Bright Data працює)
+- Facebook сторінки/групи: `run-actor.sh "apify/facebook-pages-scraper"` → `brightdata.sh scrape`
+- TikTok: `run-actor.sh "clockworks/tiktok-profile-scraper"` → `clockworks/tiktok-scraper` (комплексний)
+- TikTok пошук: `run-actor.sh "clockworks/tiktok-user-search-scraper"` (знайти за ключовими словами)
 - YouTube: `run-actor.sh "streamers/youtube-channel-scraper"` → `jina.sh read` → `brightdata.sh scrape`
-- Telegram channels: `web_fetch t.me/s/{channel}` → `jina.sh read`
+- Telegram-канали: `web_fetch t.me/s/{channel}` → `jina.sh read`
 - Twitter/X: `python3 scripts/twitter.py tweet <url>` → `jina.sh read`
-- Google Maps (businesses): `run-actor.sh "compass/crawler-google-places"`
-- Contact enrichment: `run-actor.sh "vdrmota/contact-info-scraper"` (extract emails/phones from any URL)
-- Any site: `jina.sh read` → `brightdata.sh scrape`
+- Google Maps (бізнес): `run-actor.sh "compass/crawler-google-places"`
+- Збагачення контактів: `run-actor.sh "vdrmota/contact-info-scraper"` (витяг email/телефонів з будь-якого URL)
+- Будь-який сайт: `jina.sh read` → `brightdata.sh scrape`
 
-**run-actor.sh** = universal Apify runner (embedded, 55+ actors). See `references/tools.md` for full actor catalog.
+**run-actor.sh** = універсальний запуск Apify (вбудований, 55+ акторів). Повний каталог акторів — `references/tools.md`.
 
-Read `references/tools.md` ONLY when troubleshooting a failed tool.
+Читати `references/tools.md` ЛИШЕ при діагностиці збою інструменту.
 
-### ⚠️ Content Platform Rule (CRITICAL)
+### ⚠️ Правило контентних платформ (КРИТИЧНО)
 
-When you find YouTube, podcast, blog, or conference talks — read `references/content-extraction.md` **immediately** and extract 3-5 pieces of content on the spot.
+Коли знайдено YouTube, подкаст, блог або конференційні виступи — читати `references/content-extraction.md` **негайно** і витягувати 3-5 матеріалів на місці.
 
-Do NOT just note the URL. Extract transcripts/text NOW.
-A 20-minute YouTube video reveals more about a person than their entire LinkedIn.
-Content platforms are the #1 source for psychoprofile — skipping them = shallow dossier.
+НЕ просто фіксувати URL. Витягувати транскрипти/текст ЗАРАЗ.
+20-хвилинне YouTube-відео розкриває про людину більше ніж весь їхній LinkedIn.
+Контентні платформи — джерело №1 для психопрофілю — пропускати їх = поверхневе досьє.
 
-### OpSec-Aware Targets
+### Цілі з OpSec-захистом
 
-If initial searches return unusually little for someone who should have a footprint:
+Якщо початкові пошуки повертають надзвичайно мало для когось, хто повинен мати слід:
 
-1. **Wayback Machine:** `web_fetch "https://web.archive.org/web/2024*/target-url"` — deleted profiles, old bios
-2. **Google Cache:** `web_search "cache:domain.com/path"` — recently removed pages
-3. **Yandex Cache:** `brightdata.sh search-yandex "Name"` — Yandex indexes CIS deeper and caches longer
-4. **Username variations:** try transliteration (Иванов → ivanov, ivanoff), birth year suffixes, company abbreviations
-5. **Reverse image search:** if photo found, check for other profiles using same avatar
-6. **Conference archives:** speaker bios often survive after profiles are deleted
+1. **Wayback Machine:** `web_fetch "https://web.archive.org/web/2024*/target-url"` — видалені профілі, старі біографії
+2. **Google Cache:** `web_search "cache:domain.com/path"` — нещодавно видалені сторінки
+3. **Яндекс Cache:** `brightdata.sh search-yandex "Ім'я"` — Яндекс глибше індексує СНД і довше кешує
+4. **Варіанти нікнейму:** спробувати транслітерацію (Іванов → ivanov, ivanoff), суфікси року народження, абревіатури компанії
+5. **Зворотний пошук зображень:** якщо знайдено фото — перевірити інші профілі з тим самим аватаром
+6. **Архіви конференцій:** біографії доповідачів часто виживають після видалення профілів
 
-## Phase 3: Cross-Reference & Confidence Scoring
+## Фаза 3: Крос-верифікація та оцінка достовірності
 
-### Step 1: Fact Table
-List every claim as a row: fact | source 1 | source 2 | grade.
+### Крок 1: Таблиця фактів
+Кожне твердження — окремий рядок: факт | джерело 1 | джерело 2 | оцінка.
 
-### Step 2: Cross-check key facts
-For each critical fact (employer, role, location, education):
-- Compare LinkedIn title vs Telegram signature vs email signature vs company website
-- If 2+ match → Grade A
-- If only 1 source → Grade B
-- If inferred (timezone from messages, geotag) → Grade C
-- If single unverified mention → Grade D
+### Крок 2: Крос-перевірка ключових фактів
+Для кожного критичного факту (роботодавець, посада, локація, освіта):
+- Порівняти заголовок LinkedIn vs підпис Telegram vs підпис email vs сайт компанії
+- Якщо 2+ збігається → Оцінка A
+- Якщо лише 1 джерело → Оцінка B
+- Якщо виведено (часовий пояс з повідомлень, геотег) → Оцінка C
+- Якщо одна неперевірена згадка → Оцінка D
 
-### Step 3: Resolve contradictions
-If LinkedIn says "CEO" but company site says "Co-founder" — flag explicitly. Include both with sources. Do NOT silently pick one.
+### Крок 3: Вирішення суперечностей
+Якщо LinkedIn каже "CEO", а сайт компанії "Co-founder" — позначити явно. Включити обидва з джерелами. НЕ обирати мовчки одне.
 
-### Step 4: Name collision check
-If common name — verify at least 2 facts (company + city, or photo + company) link to same person. If unsure, split into separate entities.
+### Крок 4: Перевірка колізій імен
+Якщо поширене ім'я — верифікувати щонайменше 2 факти (компанія + місто, або фото + компанія), що стосуються однієї людини. Якщо не впевнений — розділити на окремі сутності.
 
-### Confidence grades:
+### Оцінки достовірності:
 
-- **A (confirmed)**: 2+ independent sources, or official/verified profile, or direct Telegram/email conversation
-- **B (probable)**: 1 credible source (LinkedIn, official media, company site)
-- **C (inferred)**: indirect evidence (photo geotag, timezone from message patterns, connections)
-- **D (unverified)**: single mention, could be wrong
+- **A (підтверджено)**: 2+ незалежних джерела, або офіційний/верифікований профіль, або пряма Telegram/email-розмова
+- **B (вірогідно)**: 1 надійне джерело (LinkedIn, офіційне ЗМІ, сайт компанії)
+- **C (виведено)**: непрямі докази (геотег фото, часовий пояс з паттернів повідомлень, зв'язки)
+- **D (неперевірено)**: одна згадка, може бути помилкою
 
-Internal intelligence (Phase 1.5) counts as an independent source.
+Внутрішня розвідка (Фаза 1.5) вважається незалежним джерелом.
 
-## Phase 4: Psychoprofile
+## Фаза 4: Психопрофіль
 
-Read `references/psychoprofile.md` ONLY at this phase.
+Читати `references/psychoprofile.md` ЛИШЕ на цій фазі.
 
-1. Collect text samples: posts, bios, interviews, channel content, **Telegram messages** (highest signal).
-2. Assess MBTI per dimension with cited behavioral evidence and confidence (high/medium/low).
-3. Quantify writing style: sentence length, emoji density, self-reference rate.
-4. **Compare formal (LinkedIn/email) vs informal (Telegram/Instagram) voice** — the delta reveals the real person.
-5. Deduce values from actions, not self-reported claims.
-6. Zodiac ONLY if DOB confirmed (Grade A or B).
+1. Зібрати текстові зразки: пости, біографії, інтерв'ю, контент каналу, **Telegram-повідомлення** (найвищий сигнал).
+2. Оцінити MBTI по кожному виміру з посиланнями на поведінкові докази та впевненістю (висока/середня/низька).
+3. Кількісно оцінити стиль письма: довжина речень, щільність емодзі, частота самовідсилань.
+4. **Порівняти формальний (LinkedIn/email) і неформальний (Telegram/Instagram) голос** — дельта розкриває справжню людину.
+5. Виводити цінності з дій, а не з самозаявлених тверджень.
+6. Знак зодіаку ЛИШЕ якщо DOB підтверджена (Оцінка A або B).
 
-## Phase 5: Completeness Evaluation (Recursive)
+## Фаза 5: Оцінка повноти (Рекурсивна)
 
-### Axis 1: Data Coverage (pass/fail per dimension)
+### Вісь 1: Покриття даних (пройдено/провалено по виміру)
 
-9 mandatory checks. If any fail, flag as critical gap:
+9 обов'язкових перевірок. Якщо будь-яка провалена — позначити як критичний пробіл:
 
-1. Subject correctly identified? (not a namesake)
-2. Current role/company confirmed?
-3. At least 2 social platforms found?
-4. At least 1 contact method (email/phone/messenger)?
-5. Career history has 2+ verifiable positions?
-6. Location (current) established?
-7. At least 1 photo found?
-8. No unresolved contradictions between sources?
-9. Internal intelligence checked? (Telegram/email/vault — even if empty)
+1. Об'єкт правильно ідентифікований? (не однофамілець)
+2. Поточна посада/компанія підтверджена?
+3. Знайдено щонайменше 2 соціальні платформи?
+4. Є щонайменше 1 спосіб зв'язку (email/телефон/месенджер)?
+5. Кар'єрна историія має 2+ верифікованих позиції?
+6. Поточна локація встановлена?
+7. Знайдено щонайменше 1 фото?
+8. Немає невирішених суперечностей між джерелами?
+9. Перевірено внутрішню розвідку? (Telegram/email/vault — навіть якщо порожньо)
 
-### Axis 2: Depth Score (8 weighted criteria)
+### Вісь 2: Оцінка глибини (8 зважених критеріїв)
 
-| Dimension | Weight | What to score (1-10) |
-|-----------|--------|---------------------|
-| Identity | 0.15 | Full name, DOB, location, education, photo |
-| Career | 0.20 | Completeness of work history, current role clarity |
-| Digital footprint | 0.15 | Number of platforms found, account activity level |
-| Psychoprofile | 0.15 | MBTI confidence, writing style quantified, values deduced |
-| Internal intel | 0.10 | Telegram/email history depth, vault data |
-| Personal life | 0.05 | Family, hobbies, lifestyle, pets |
-| Cross-reference | 0.10 | How many facts are A-grade, contradiction count |
-| Actionability | 0.10 | Entry points identified, approach strategy clear |
+| Вимір | Вага | Що оцінювати (1-10) |
+|---|---|---|
+| Ідентичність | 0.15 | Повне ім'я, DOB, локація, освіта, фото |
+| Кар'єра | 0.20 | Повнота кар'єрної историії, чіткість поточної посади |
+| Цифровий слід | 0.15 | Кількість знайдених платформ, рівень активності |
+| Психопрофіль | 0.15 | Впевненість MBTI, кількісний стиль письма, виведені цінності |
+| Внутрішня розвідка | 0.10 | Глибина Telegram/email-историії, дані vault |
+| Особисте життя | 0.05 | Сім'я, хобі, спосіб життя, домашні тварини |
+| Крос-верифікація | 0.10 | Кількість фактів класу A, число суперечностей |
+| Дієвість | 0.10 | Визначені точки входу, чіткість стратегії підходу |
 
-Weighted sum (1-10) = **Depth Score**.
+Зважена сума (1-10) = **Оцінка глибини**.
 
-### Axis 3: Source Diversity
+### Вісь 3: Різноманітність джерел
 
-Count unique source types used (max 12):
-LinkedIn, Instagram, Facebook, Telegram DM, Telegram channel, VK, Twitter/X,
-company website, press/media articles, conference profiles, government/business registries,
-email correspondence.
+Підрахувати унікальні типи джерел (макс. 12):
+LinkedIn, Instagram, Facebook, Telegram ЛС, Telegram-канал, VK, Twitter/X,
+сайт компанії, статті преси/медіа, профілі конференцій, державні/бізнес-реєстри,
+листування email.
 
-- 8+ source types = Excellent
-- 5-7 = Good
-- 2-4 = Shallow
-- 1 = Insufficient
+- 8+ типів джерел = Відмінно
+- 5-7 = Добре
+- 2-4 = Поверхнево
+- 1 = Недостатньо
 
-### Gap Analysis
+### Аналіз пробілів
 
-| Depth Score | Coverage | Diagnosis | Action |
-|------------|----------|-----------|--------|
-| 8+ | All pass | Strong dossier | Proceed to Phase 6 |
-| 8+ | Some fail | Deep but blind spots | Target failed checks, 1 more cycle |
-| <7 | All pass | Wide but shallow | Deepen via interviews/articles/deepsearch |
-| <7 | Some fail | Restart needed | Different search angle, new tool combination |
+| Оцінка глибини | Покриття | Діагноз | Дія |
+|---|---|---|---|
+| 8+ | Все пройшло | Міцне досьє | Перейти до Фази 6 |
+| 8+ | Деякі провалені | Глибоке, але сліпі плями | Цільова робота з провалами, ще 1 цикл |
+| <7 | Все пройшло | Широке, але поверхневе | Поглибити через статті/deepsearch |
+| <7 | Деякі провалені | Потрібен перезапуск | Інший кут пошуку, нова комбінація інструментів |
 
-### Stopping Criteria
+### Критерії зупинки
 
-**(a)** Depth Score ≥ 8.0 AND all coverage checks pass → exit to Phase 6
-**(b)** 3 cycles completed → deliver best available with honest assessment
-**(c)** Two cycles with delta < 0.5 → plateau reached, deliver with note
+**(a)** Оцінка глибини ≥ 8.0 І всі перевірки покриття пройдено → вихід до Фази 6
+**(b)** Завершено 3 цикли → видати найкраще доступне з чесною оцінкою
+**(c)** Два цикли з дельтою < 0.5 → досягнуто плато, видати з приміткою
 
-### Calibration Benchmarks
+### Калібрувальні орієнтири
 
-- **9-10**: full career timeline, 5+ platforms, confirmed DOB, psychoprofile with high confidence, family/hobbies known, multiple entry points, Telegram history analyzed. Equivalent to a professional PI report.
-- **7-8**: career outline, 3+ platforms, most facts B-grade or above, psychoprofile with medium confidence. Solid due diligence.
-- **5-6**: basic bio, 1-2 platforms, some gaps. Quick background check level.
-- **<5**: minimal data found. Name + current role at best. Flag as insufficient.
+- **9-10**: повна кар'єрна лінія, 5+ платформ, підтверджена DOB, психопрофіль з високою впевненістю, відома сім'я/хобі, множинні точки входу, проаналізована Telegram-историія. Еквівалент звіту приватного детектива-професіонала.
+- **7-8**: нарис кар'єри, 3+ платформи, більшість фактів класу B або вище, психопрофіль із середньою впевненістю. Якісна перевірка due diligence.
+- **5-6**: базова біографія, 1-2 платформи, деякі пробіли. Рівень швидкої перевірки анкети.
+- **<5**: знайдено мінімум даних. В кращому випадку ім'я + поточна посада. Позначити як недостатнє.
 
-## Phase 6: Dossier Output
+## Фаза 6: Вивід досьє
 
-Read `assets/dossier-template.md` before rendering. Follow the template structure exactly.
-No markdown tables in output (Telegram cannot render). Bullet lists only.
-Report Depth Score, source count, source types, and total API spend.
+### Крок 1: Вибір формату виводу
 
-If internal intelligence was used, add a separate **"из переписки"** section
-(marked as internal/confidential, not for sharing outside).
+Перед рендерингом — запитати користувача (або визначити з контексту):
 
-## Budget
+> **Куди / як зберегти досьє?**
+> 1. **Chat** — вивести в чат (за замовчуванням)
+> 2. **File .md** — зберегти як `/tmp/osint-{ім'я}-{РРРР-ММ-ДД}.md`
+> 3. **File .pdf** — зберегти як `/tmp/osint-{ім'я}-{РРРР-ММ-ДД}.pdf`
+> 4. **File .docx** — зберегти як `/tmp/osint-{ім'я}-{РРРР-ММ-ДД}.docx`
+> 5. **Notion** — створити сторінку через Notion MCP
+> 6. **Telegram** — надіслати через `tg.py`
 
-- ≤$0.50 per target: spend without asking.
-- >$0.50: ask user before proceeding.
-- Track cumulative spend per research session.
+**Правила:**
+- Якщо користувач вже вказав формат у запиті ("зберегти в Notion", "save as pdf", "у файл .docx") — пропустити питання, виконати напряму.
+- Дозволено кілька форматів: "pdf + Notion" → генерувати PDF І зберегти в Notion.
+- За замовчуванням (немає відповіді протягом 1 ходу): **Chat**.
 
-## Troubleshooting
+### Крок 2: Визначення інструментів для файлових форматів
 
-- **All tools return empty**: target has minimal digital presence. Try Bright Data Yandex search (better for CIS region), search by company + role instead of name.
-- **Wrong person keeps appearing**: add company name, city, or role to all queries. Use quotes around full name.
-- **LinkedIn blocked**: use `brightdata.sh scrape` as primary instead of Apify.
-- **Apify actor dead/changed**: check `apify.sh store-search "linkedin scraper"` for alternatives. Actors on Apify are volatile — always have a Bright Data fallback.
-- **Depth Score stuck at 6-7**: likely missing press/media articles or internal intel. Search industry publications (AdIndex, Sostav, Forbes, Kommersant for Russian market). Try `jina.sh deepsearch`. Check Telegram history.
-- **No social media found**: person may use pseudonyms. Search by email, phone, or company employee page. Search Apify store: `bash scripts/apify.sh store-search "people search"`. If `mcpc` installed: `APIFY_TOKEN=$APIFY_API_TOKEN mcpc --json mcp.apify.com --header "Authorization: Bearer $APIFY_TOKEN" tools-call search-actors keywords:="people search" limit:=10`. Check Telegram contacts by phone.
-- **TikTok scraper fails**: try `clockworks/free-tiktok-scraper` (free tier) as fallback. TikTok usernames often differ from other platforms — search by real name via `clockworks/tiktok-user-search-scraper`.
-- **Need emails from website**: use `vdrmota/contact-info-scraper` — it crawls the site and extracts all contact info.
-- **Rate limited (429)**: back off 5s, then 15s. Switch to fallback tool. Never retry immediately.
+Перед конвертацією в PDF/DOCX — перевірити доступні інструменти (в порядку пріоритету):
 
-## Anti-Patterns
+```bash
+# Перевірити pandoc (найкраща якість, обробляє і PDF і DOCX)
+where pandoc 2>/dev/null && echo "pandoc: ok" || echo "pandoc: відсутній"
+# Перевірити md-to-pdf (Node-запасний для PDF)
+where md-to-pdf 2>/dev/null && echo "md-to-pdf: ok" || echo "md-to-pdf: відсутній"
+```
 
-1. Never start with a single tool. Launch all available in parallel.
-2. Never retry a failed tool more than once. Switch to fallback.
-3. Never guess DOB, family, or zodiac.
-4. Never attribute data without cross-referencing against namesakes.
-5. Never include unsourced facts.
-6. Never reveal OSINT methods in public messages.
-7. Never exceed 3 recursive cycles. Diminishing returns.
-8. Never rate Depth Score 9+ without justification.
-9. Never skip psychoprofile. Without it, dossier = Wikipedia article.
-10. Never skip Phase 1.5 (internal intel). Telegram history is often the richest source.
-11. Never quote DMs verbatim in shareable outputs. Summarize and cite.
-12. Never hammer APIs without rate limiting. Stagger requests.
+**Якщо pandoc відсутній** → запропонувати встановити:
+```bash
+# Windows (winget доступний)
+winget install JohnMacFarlane.Pandoc
+# або: choco install pandoc
+```
+
+**Якщо pandoc недоступний і користувач відмовляється від встановлення** → запасний варіант:
+- PDF: використовувати `md-to-pdf` (встановити через `npm install -g md-to-pdf`)
+- DOCX: використовувати скрипт `python-docx` (встановити через `pip install python-docx`)
+
+### Крок 3: Виконання формату
+
+**Chat** (за замовчуванням):
+- Читати `assets/dossier-template.md`, суворо дотримуватись структури.
+- Без markdown-таблиць (Telegram не може рендерити). Тільки маховик-списки.
+
+**File .md**:
+- Записати досьє в `/tmp/osint-{slug-ім'я}-{РРРР-ММ-ДД}.md` через Write tool.
+- Повна структура dossier-template з markdown-форматуванням.
+- Підтвердити збережений шлях після запису.
+
+**File .pdf**:
+1. Спочатку записати `.md` (див. вище).
+2. Конвертувати:
+   ```bash
+   # pandoc (пріоритетний) — потребує LaTeX для PDF або використовувати HTML-рушій:
+   pandoc /tmp/osint-{ім'я}.md -o /tmp/osint-{ім'я}.pdf \
+     --pdf-engine=wkhtmltopdf \
+     --metadata title="OSINT: {Повне ім'я}"
+   # запасний: md-to-pdf
+   md-to-pdf /tmp/osint-{ім'я}.md
+   ```
+3. Підтвердити збережений шлях + розмір файлу.
+
+**File .docx**:
+1. Спочатку записати `.md` (див. вище).
+2. Конвертувати:
+   ```bash
+   pandoc /tmp/osint-{ім'я}.md -o /tmp/osint-{ім'я}.docx \
+     --metadata title="OSINT: {Повне ім'я}"
+   ```
+3. Підтвердити збережений шлях + розмір файлу.
+
+**Notion**:
+- Використовувати `notion-search` для пошуку наявної OSINT-бази у workspace.
+- Якщо знайдено → `notion-create-pages` як новий запис у цій базі.
+- Якщо не знайдено → `notion-create-pages` як окрема сторінка в корені workspace.
+- Формат назви: `OSINT: {Повне ім'я} ({РРРР-ММ-ДД})`
+- Поділитись URL Notion після збереження.
+
+**Telegram**:
+- Перевірити результати Фази 0: чи доступний `tg.py`?
+- Якщо так → надіслати через `python3 skills/telegram/scripts/tg.py send {chat_id} "{досьє}"`
+- Якщо ні → повідомити користувача, запасний варіант — Chat.
+- Формат Telegram: без markdown-таблиць, компактний стиль-список, макс. 4096 символів на повідомлення (розбивати за потреби).
+
+### Крок 4: Рендеринг
+
+Читати `assets/dossier-template.md` перед рендерингом. Суворо дотримуватись структури шаблону.
+Вказати Оцінку глибини, кількість джерел, типи джерел і загальні витрати на API.
+
+Якщо використовувалась внутрішня розвідка — додати окремий розділ **"з переписки"**
+(позначений як внутрішній/конфіденційний, не для поширення).
+
+## Бюджет
+
+- ≤$0.50 на об'єкт: витрачати без запиту.
+- >$0.50: запитати користувача перед продовженням.
+- Відстежувати накопичені витрати на сесію дослідження.
+
+## Усунення неполадок
+
+- **Всі інструменти повертають порожнє**: об'єкт має мінімальну цифрову присутність. Спробувати Bright Data Яндекс-пошук (кращий для СНД-регіону), шукати за компанією + посадою замість імені.
+- **Постійно з'являється не та людина**: додати назву компанії, місто або посаду до всіх запитів. Використовувати лапки навколо повного імені.
+- **LinkedIn заблокований**: використовувати `brightdata.sh scrape` як основний замість Apify.
+- **Apify-актор мертвий/змінився**: перевірити `apify.sh store-search "linkedin scraper"` для альтернатив. Актори на Apify нестабільні — завжди мати запасний варіант Bright Data.
+- **Оцінка глибини застрягла на 6-7**: ймовірно, відсутні статті преси/медіа або внутрішня розвідка. Шукати галузеві видання (AdIndex, Sostav, Forbes, Коммерсант для російського ринку). Спробувати `jina.sh deepsearch`. Перевірити Telegram-историію.
+- **Соціальних мереж не знайдено**: людина може використовувати псевдоніми. Шукати за email, телефоном або сторінкою співробітників компанії. Пошук в Apify store: `bash scripts/apify.sh store-search "people search"`. Якщо встановлений `mcpc`: `APIFY_TOKEN=$APIFY_API_TOKEN mcpc --json mcp.apify.com --header "Authorization: Bearer $APIFY_TOKEN" tools-call search-actors keywords:="people search" limit:=10`. Перевірити Telegram-контакти за телефоном.
+- **Скрапер TikTok відмовляє**: спробувати `clockworks/free-tiktok-scraper` (безкоштовний рівень) як запасний. Нікнейми TikTok часто відрізняються від інших платформ — шукати за справжнім ім'ям через `clockworks/tiktok-user-search-scraper`.
+- **Потрібні email з сайту**: використовувати `vdrmota/contact-info-scraper` — обходить сайт і витягує всю контактну інформацію.
+- **Rate limit (429)**: відступити 5с, потім 15с. Перемкнутись на запасний інструмент. Ніколи не повторювати запит негайно.
+
+## Антипаттерни
+
+1. Ніколи не починати з одного інструменту. Запускати всі доступні паралельно.
+2. Ніколи не повторювати інструмент, що відмовив, більше одного разу. Перейти на запасний.
+3. Ніколи не вгадувати DOB, сім'ю або знак зодіаку.
+4. Ніколи не приписувати дані без крос-верифікації проти однофамільців.
+5. Ніколи не включати факти без джерела.
+6. Ніколи не розкривати методи OSINT у публічних повідомленнях.
+7. Ніколи не перевищувати 3 рекурсивні цикли. Спадна віддача.
+8. Ніколи не оцінювати Глибину 9+ без обґрунтування.
+9. Ніколи не пропускати психопрофіль. Без нього досьє = стаття Вікіпедії.
+10. Ніколи не пропускати Фазу 1.5 (внутрішня розвідка). Telegram-историія часто найбагатше джерело.
+11. Ніколи не цитувати ЛС дослівно у матеріалах для поширення. Узагальнювати і цитувати.
+12. Ніколи не бомбардувати API без обмеження швидкості. Розводити запити.
