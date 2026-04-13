@@ -6,8 +6,6 @@
 
 > **Early Beta** — functional but APIs change, Apify actors rotate, and edge cases are still being discovered.
 
-> **[Версия на русском / Russian version](README.ru.md)**
-
 Systematic intelligence gathering on individuals. From a name or handle to a scored dossier with psychoprofile, career map, and entry points.
 
 ### Compatible Agents
